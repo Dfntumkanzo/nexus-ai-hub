@@ -92,3 +92,37 @@ export const testSupabaseConnection = async (url: string, key: string): Promise<
     return { success: false, message: err?.message || 'Network error connecting to Supabase.' };
   }
 };
+
+export const signInWithGoogleOAuth = async (): Promise<{ data: any; error: any }> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { data: null, error: new Error('Supabase client is not connected.') };
+  }
+  
+  try {
+    const res = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
+    return res;
+  } catch (err: any) {
+    return { data: null, error: err };
+  }
+};
+
+export const getSupabaseAuthUser = async () => {
+  const supabase = getSupabaseClient();
+  if (!supabase) return null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+  } catch (err) {
+    return null;
+  }
+};
