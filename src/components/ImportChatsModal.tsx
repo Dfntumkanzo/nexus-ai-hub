@@ -181,7 +181,11 @@ export const ImportChatsModal: React.FC<ImportChatsModalProps> = ({
       await onGoogleSignIn();
       setGoogleStatusNote('Redirecting to Google Sign-In...');
     } catch (err: any) {
-      setGoogleStatusNote(err.message || 'Google OAuth prompt error.');
+      if (err?.message?.includes('provider is not enabled')) {
+        setGoogleStatusNote('Google OAuth is disabled in your Supabase project (needs Google Client ID & Secret).');
+      } else {
+        setGoogleStatusNote(err.message || 'Google OAuth prompt error.');
+      }
     } finally {
       setIsGoogleLoading(false);
     }
