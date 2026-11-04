@@ -28,7 +28,8 @@ import {
   Users,
   Compass,
   Cpu,
-  Layers
+  Layers,
+  UserPlus
 } from 'lucide-react';
 import { 
   ProviderAccount, 
@@ -45,7 +46,7 @@ import { autoDetectMemory, saveSharedMemory } from '../lib/memory';
 
 interface UnifiedChatViewProps {
   accounts: ProviderAccount[];
-  onAddAccount: (provider: AIProvider, name: string, email?: string) => void;
+  onAddAccount: (provider: AIProvider, name: string, email?: string, apiKey?: string) => void;
   onDeleteAccount: (id: string) => void;
   conversations: Conversation[];
   activeConversation: Conversation | null;
@@ -133,9 +134,11 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
   });
 
   // Modal for Adding an Account
-  const [addAccountModalProvider, setAddAccountModalProvider] = useState<AIProvider | null>(null);
+  const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [newAccountProvider, setNewAccountProvider] = useState<AIProvider>('openai');
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountEmail, setNewAccountEmail] = useState('');
+  const [newAccountApiKey, setNewAccountApiKey] = useState('');
 
   // Audio player state for Suno
   const [playingAudioUrl, setPlayingAudioUrl] = useState<string | null>(null);
@@ -356,20 +359,28 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
     }
   };
 
-  const handleOpenAddAccount = (provider: AIProvider, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const existingCount = accounts.filter(a => a.provider === provider).length;
-    setAddAccountModalProvider(provider);
+  const handleOpenAddAccount = (provider?: AIProvider, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const targetProvider = provider || 'openai';
+    const existingCount = accounts.filter(a => a.provider === targetProvider).length;
+    setNewAccountProvider(targetProvider);
     setNewAccountName(`Account ${existingCount + 1}`);
     setNewAccountEmail('');
+    setNewAccountApiKey('');
+    setIsAddAccountModalOpen(true);
   };
 
   const handleSubmitAddAccount = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addAccountModalProvider || !newAccountName.trim()) return;
+    if (!newAccountName.trim()) return;
 
-    onAddAccount(addAccountModalProvider, newAccountName.trim(), newAccountEmail.trim() || undefined);
-    setAddAccountModalProvider(null);
+    onAddAccount(
+      newAccountProvider, 
+      newAccountName.trim(), 
+      newAccountEmail.trim() || undefined,
+      newAccountApiKey.trim() || undefined
+    );
+    setIsAddAccountModalOpen(false);
   };
 
   // Filter conversations based on search
@@ -401,7 +412,7 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
               <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-blue-400" />
               </div>
-              <span className="font-semibold text-xs text-white tracking-tight">ALL-IN-ONE AI HUB</span>
+              <span className="font-semibold text-xs text-white tracking-tight">NEXUS AI HUB</span>
             </div>
 
             <button
@@ -413,21 +424,28 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
             </button>
           </div>
 
-          {/* Global New Chat Button */}
-          <button
-            onClick={() => {
-              const currentP = activeConversation?.provider || 'openai';
-              const currentA = activeConversation?.accountId || accounts.find(a => a.provider === currentP)?.id || accounts[0]?.id;
-              onNewConversation(currentP, currentA);
-            }}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-[#262626] hover:bg-[#303030] text-white text-xs font-medium transition-all shadow-sm group"
-          >
-            <div className="flex items-center space-x-2">
-              <Plus className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-              <span>New chat in active account</span>
-            </div>
-            <span className="text-[10px] text-[#777] font-mono">Ctrl+K</span>
-          </button>
+          {/* Action Row: New Chat + Add Account */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                const currentP = activeConversation?.provider || 'openai';
+                const currentA = activeConversation?.accountId || accounts.find(a => a.provider === currentP)?.id || accounts[0]?.id;
+                onNewConversation(currentP, currentA);
+              }}
+              className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-[#262626] hover:bg-[#303030] text-white text-xs font-medium transition-all shadow-sm group"
+            >
+              <Plus className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform" />
+              <span>New chat</span>
+            </button>
+
+            <button
+              onClick={() => handleOpenAddAccount()}
+              className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-xs font-medium transition-all shadow-sm group"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-blue-400 group-hover:scale-110 transition-transform" />
+              <span>Add account</span>
+            </button>
+          </div>
 
           {/* Global Search across all chats */}
           <div className="relative">
@@ -486,7 +504,7 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
                     </span>
                     <button
                       onClick={(e) => handleOpenAddAccount(provider.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-[#888] hover:text-white hover:bg-[#2a2a2a] rounded transition-all"
+                      className="p-1 text-[#888] hover:text-white hover:bg-[#2a2a2a] rounded transition-all"
                       title={`Add another ${provider.name} account`}
                     >
                       <Plus className="w-3 h-3" />
@@ -514,7 +532,7 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
                           >
                             <div className="flex items-center space-x-1.5 truncate">
                               {isAccountExpanded ? (
-                                <ChevronDown className="w-3 h-3 text-[#666] shrink-0" />
+                                <ChevronDown className="w-3.5 h-3 text-[#666] shrink-0" />
                               ) : (
                                 <ChevronRight className="w-3 h-3 text-[#666] shrink-0" />
                               )}
@@ -538,7 +556,7 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
                                   e.stopPropagation();
                                   onNewConversation(provider.id, account.id);
                                 }}
-                                className="opacity-0 group-hover:opacity-100 p-0.5 text-[#888] hover:text-white rounded"
+                                className="p-0.5 text-[#888] hover:text-white rounded"
                                 title="New chat in this account"
                               >
                                 <Plus className="w-3 h-3" />
@@ -605,6 +623,15 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
                         </div>
                       );
                     })}
+
+                    {/* "+ Add Account" link at the bottom of each provider */}
+                    <button
+                      onClick={(e) => handleOpenAddAccount(provider.id, e)}
+                      className="w-full text-left px-2 py-1 text-[10px] text-[#777] hover:text-white hover:bg-[#202020] rounded flex items-center space-x-1.5 transition-colors"
+                    >
+                      <Plus className="w-2.5 h-2.5 text-blue-400" />
+                      <span>Add another {provider.name} account</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -1265,32 +1292,62 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
       </main>
 
       {/* ============================================================== */}
-      {/* 3. MODAL FOR ADDING AN ACCOUNT UNDER A PROVIDER                 */}
+      {/* 3. MODAL FOR ADDING AN ACCOUNT (GLOBAL OR PER-PROVIDER)        */}
       {/* ============================================================== */}
-      {addAccountModalProvider && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in font-sans">
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-2xl w-full max-w-sm p-5 shadow-2xl space-y-4">
+      {isAddAccountModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="bg-[#1a1a1a] border border-[#333] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#2e2e2e] pb-3">
-              <div className="flex items-center space-x-2">
-                <span
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: PROVIDERS_LIST.find(p => p.id === addAccountModalProvider)?.brandColor }}
-                />
-                <h3 className="text-sm font-bold text-white">
-                  Add {PROVIDERS_LIST.find(p => p.id === addAccountModalProvider)?.name} Account
-                </h3>
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">
+                    Add Account
+                  </h3>
+                  <p className="text-[11px] text-[#8e8e8e]">Connect a new AI identity profile</p>
+                </div>
               </div>
               <button
-                onClick={() => setAddAccountModalProvider(null)}
-                className="text-[#777] hover:text-white"
+                onClick={() => setIsAddAccountModalOpen(false)}
+                className="text-[#777] hover:text-white p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitAddAccount} className="space-y-3">
+            <form onSubmit={handleSubmitAddAccount} className="space-y-3.5">
+              {/* Select AI Provider */}
               <div>
-                <label className="block text-xs font-medium text-[#ccc] mb-1">
+                <label className="block text-xs font-semibold text-[#ccc] mb-1.5">
+                  AI App / Provider
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PROVIDERS_LIST.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setNewAccountProvider(p.id)}
+                      className={`flex items-center space-x-2 p-2 rounded-xl border text-xs font-medium transition-all ${
+                        newAccountProvider === p.id
+                          ? 'bg-[#2b2b2b] text-white border-blue-500 shadow-sm'
+                          : 'bg-[#151515] text-[#888] border-[#2e2e2e] hover:text-white'
+                      }`}
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: p.brandColor }}
+                      />
+                      <span className="truncate">{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Account Label */}
+              <div>
+                <label className="block text-xs font-semibold text-[#ccc] mb-1">
                   Account Name / Label *
                 </label>
                 <input
@@ -1298,36 +1355,55 @@ export const UnifiedChatView: React.FC<UnifiedChatViewProps> = ({
                   required
                   value={newAccountName}
                   onChange={e => setNewAccountName(e.target.value)}
-                  placeholder="e.g. Account 2 (Work), Research, Client X"
-                  className="w-full bg-[#141414] border border-[#333] rounded-xl px-3 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-blue-500"
+                  placeholder="e.g. Account 2 (Work), Research, Client Project"
+                  className="w-full bg-[#141414] border border-[#333] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-blue-500 font-sans"
                   autoFocus
                 />
               </div>
 
+              {/* Email Address */}
               <div>
-                <label className="block text-xs font-medium text-[#ccc] mb-1">
+                <label className="block text-xs font-semibold text-[#ccc] mb-1">
                   Email Address (Optional)
                 </label>
                 <input
                   type="email"
                   value={newAccountEmail}
                   onChange={e => setNewAccountEmail(e.target.value)}
-                  placeholder="e.g. work@company.com"
-                  className="w-full bg-[#141414] border border-[#333] rounded-xl px-3 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-blue-500"
+                  placeholder="e.g. myname@company.com"
+                  className="w-full bg-[#141414] border border-[#333] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-blue-500 font-sans"
                 />
               </div>
 
-              <div className="pt-2 flex justify-end space-x-2">
+              {/* API Key or Token */}
+              <div>
+                <label className="block text-xs font-semibold text-[#ccc] mb-1 flex items-center justify-between">
+                  <span>API Key or OpenRouter Key (Optional)</span>
+                  <span className="text-[10px] text-[#777] font-mono">BYOK Supported</span>
+                </label>
+                <input
+                  type="password"
+                  value={newAccountApiKey}
+                  onChange={e => setNewAccountApiKey(e.target.value)}
+                  placeholder="sk-... or leave empty for smart shared engine"
+                  className="w-full bg-[#141414] border border-[#333] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#555] focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <p className="mt-1 text-[11px] text-[#777]">
+                  Leaving empty automatically uses the built-in smart engine with Universal Shared Memory.
+                </p>
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2 border-t border-[#282828]">
                 <button
                   type="button"
-                  onClick={() => setAddAccountModalProvider(null)}
-                  className="px-3 py-1.5 bg-[#262626] hover:bg-[#333] text-[#aaa] rounded-xl text-xs"
+                  onClick={() => setIsAddAccountModalOpen(false)}
+                  className="px-3.5 py-2 bg-[#262626] hover:bg-[#333] text-[#aaa] hover:text-white rounded-xl text-xs font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs shadow-md"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all active:scale-95"
                 >
                   Add Account
                 </button>

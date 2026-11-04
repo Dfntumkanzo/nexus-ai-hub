@@ -75,12 +75,13 @@ export const testSupabaseConnection = async (url: string, key: string): Promise<
 
   try {
     const tempClient = createClient(url, key);
-    const { data, error } = await tempClient.from('ai_accounts').select('id').limit(1);
+    const { error } = await tempClient.from('ai_accounts').select('id').limit(1);
 
     if (error) {
       if (error.code === '42P01') {
         return { 
-          success: true 
+          success: true,
+          message: 'Connected to Supabase project.' 
         };
       }
       return { success: false, message: `Supabase Error: ${error.message}` };

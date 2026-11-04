@@ -79,7 +79,7 @@ export const App: React.FC = () => {
   }, []);
 
   // Account operations
-  const handleAddAccount = async (provider: AIProvider, name: string, email?: string) => {
+  const handleAddAccount = async (provider: AIProvider, name: string, email?: string, apiKey?: string) => {
     const colors = ['#10A37F', '#D97757', '#4E88FF', '#E11D48', '#EC4899', '#06B6D4', '#8B5CF6'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     const newAccount: ProviderAccount = {
@@ -87,6 +87,7 @@ export const App: React.FC = () => {
       provider,
       name,
       email,
+      apiKey: apiKey?.trim() || undefined,
       avatarColor: randomColor,
       createdAt: new Date().toISOString(),
     };
