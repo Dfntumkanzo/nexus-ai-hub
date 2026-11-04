@@ -1,5 +1,6 @@
 import { ProviderAccount, Conversation, Message, AIProvider } from '../types';
-import { DEFAULT_ACCOUNTS, INITIAL_CONVERSATIONS } from './constants';
+import { DEFAULT_ACCOUNTS, INITIAL_CONVERSATIONS, AI_MODELS } from './constants';
+import { ParsedChat } from './importers';
 import { getSupabaseClient } from './supabase';
 
 const KEYS = {
@@ -271,3 +272,70 @@ function getSampleMessagesForConversation(convId: string): Message[] {
 
   return [];
 }
+
+
+// ==========================================
+// 4. BULK IMPORT CHAT HISTORY (ChatGPT / Claude)
+// ==========================================
+
+export const bulkImportChats = async (
+  accountId: string,
+  provider: AIProvider,
+  parsedChats: ParsedChat[]
+): Promise<{ conversationCount: number; messageCount: number; newConversations: Conversation[] }> => {
+  const currentConvs = getStoredConversations();
+  const defaultModel = AI_MODELS.find(m => m.provider === provider)?.id || 'gpt-4o';
+  
+  const newConvs: Conversation[] = [];
+  let totalMessages = 0;
+
+  for (let i = 0; i < parsedChats.length; i++) {
+    const pc = parsedChats[i];
+    const convId = `conv_imp_${provider}_${Date.now()}_${i}`;
+    const newConv: Conversation = {
+      id: convId,
+      provider,
+      accountId,
+      title: pc.title || `Imported Chat ${i + 1}`,
+      activeModelId: defaultModel,
+      createdAt: pc.createdAt || new Date().toISOString(),
+      updatedAt: pc.createdAt || new Date().toISOString(),
+    };
+    newConvs.push(newConv);
+
+    const msgs: Message[] = pc.messages.map((m, mIdx) => ({
+      id: `msg_imp_${convId}_${mIdx}`,
+      conversationId: convId,
+      role: m.role,
+      content: m.content,
+      model: defaultModel,
+      provider,
+      timestamp: m.timestamp || newConv.createdAt,
+    }));
+
+    totalMessages += msgs.length;
+    localStorage.setItem(`${KEYS.MESSAGES}_${convId}`, JSON.stringify(msgs));
+  }
+
+  // Prepend new conversations to current list
+  const updatedConvs = [...newConvs, ...currentConvs];
+  localStorage.setItem(KEYS.CONVERSATIONS, JSON.stringify(updatedConvs));
+
+  // Sync to Supabase in the background
+  const supabase = getSupabaseClient();
+  if (supabase && newConvs.length > 0) {
+    try {
+      const convRows = newConvs.map(c => ({
+        title: c.title,
+        provider: c.provider,
+        model: c.activeModelId,
+        updated_at: c.updatedAt,
+      }));
+      await supabase.from('conversations').upsert(convRows);
+    } catch (e) {
+      console.warn('Supabase bulk sync conversations error:', e);
+    }
+  }
+
+  return { conversationCount: newConvs.length, messageCount: totalMessages, newConversations: newConvs };
+};
