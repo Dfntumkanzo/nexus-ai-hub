@@ -14,6 +14,7 @@ export interface ModelInfo {
   badge: string;
   description: string;
   iconColor: string;
+  url: string;
 }
 
 export interface GoogleAccountProfile {
@@ -26,28 +27,22 @@ export interface GoogleAccountProfile {
   createdAt: string;
 }
 
-export interface Message {
-  id: string;
-  conversationId: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  model?: string;
-  provider?: AIProvider;
-  timestamp: string;
-}
-
-export interface Conversation {
-  id: string;
-  googleAccountId: string;
-  title: string;
-  provider: AIProvider;
-  model: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SupabaseConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   isConnected: boolean;
+}
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      webview: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        src?: string;
+        partition?: string;
+        allowpopups?: string;
+        webpreferences?: string;
+        useragent?: string;
+      };
+    }
+  }
 }

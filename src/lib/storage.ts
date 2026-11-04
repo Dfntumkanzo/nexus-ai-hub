@@ -1,174 +1,84 @@
-import { GoogleAccountProfile, Conversation, Message } from '../types';
-import { DEFAULT_GOOGLE_ACCOUNTS } from './constants';
+import { GoogleAccountProfile } from '../types';
+import { DEFAULT_GOOGLE_PROFILES } from './constants';
 import { getSupabaseClient } from './supabase';
 
 const KEYS = {
-  GOOGLE_ACCOUNTS: 'nexus_google_accounts_v2',
-  ACTIVE_GOOGLE_ID: 'nexus_active_google_id_v2',
-  CONVERSATIONS: 'nexus_conversations_v2',
-  MESSAGES: 'nexus_messages_v2',
+  PROFILES: 'nexus_google_profiles_v3',
+  ACTIVE_PROFILE: 'nexus_active_profile_v3',
+  ACTIVE_SERVICE: 'nexus_active_service_v3',
 };
 
-export const getStoredGoogleAccounts = (): GoogleAccountProfile[] => {
+export const getStoredProfiles = (): GoogleAccountProfile[] => {
   try {
-    const raw = localStorage.getItem(KEYS.GOOGLE_ACCOUNTS);
+    const raw = localStorage.getItem(KEYS.PROFILES);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (e) {
-    console.error('Failed to parse Google accounts from storage', e);
+    console.error('Failed to parse profiles from storage', e);
   }
 
-  localStorage.setItem(KEYS.GOOGLE_ACCOUNTS, JSON.stringify(DEFAULT_GOOGLE_ACCOUNTS));
-  return DEFAULT_GOOGLE_ACCOUNTS;
+  localStorage.setItem(KEYS.PROFILES, JSON.stringify(DEFAULT_GOOGLE_PROFILES));
+  return DEFAULT_GOOGLE_PROFILES;
 };
 
-export const saveGoogleAccount = async (account: GoogleAccountProfile): Promise<void> => {
-  const current = getStoredGoogleAccounts();
-  const existingIdx = current.findIndex(a => a.id === account.id || a.email === account.email);
+export const saveProfile = async (profile: GoogleAccountProfile): Promise<void> => {
+  const current = getStoredProfiles();
+  const existingIdx = current.findIndex(p => p.id === profile.id);
   let updated: GoogleAccountProfile[];
 
   if (existingIdx >= 0) {
     updated = [...current];
-    updated[existingIdx] = account;
+    updated[existingIdx] = profile;
   } else {
-    updated = [...current, account];
+    updated = [...current, profile];
   }
 
-  localStorage.setItem(KEYS.GOOGLE_ACCOUNTS, JSON.stringify(updated));
+  localStorage.setItem(KEYS.PROFILES, JSON.stringify(updated));
 
   const supabase = getSupabaseClient();
   if (supabase) {
     try {
       await supabase.from('ai_accounts').upsert({
-        id: account.id.startsWith('google-') ? undefined : account.id,
-        name: account.displayName,
-        description: account.email,
+        name: profile.displayName,
+        description: profile.email,
         badge_label: 'GOOGLE',
-        avatar_color: account.color,
-        is_default: account.isDefault,
+        avatar_color: profile.color,
+        is_default: profile.isDefault,
       });
     } catch (err) {
-      console.warn('Supabase sync error (account):', err);
+      console.warn('Supabase sync error (profile):', err);
     }
   }
 };
 
-export const deleteGoogleAccount = async (id: string): Promise<void> => {
-  const current = getStoredGoogleAccounts();
-  const updated = current.filter(a => a.id !== id);
-  localStorage.setItem(KEYS.GOOGLE_ACCOUNTS, JSON.stringify(updated));
+export const deleteProfile = async (id: string): Promise<void> => {
+  const current = getStoredProfiles();
+  const updated = current.filter(p => p.id !== id);
+  localStorage.setItem(KEYS.PROFILES, JSON.stringify(updated));
 };
 
-export const getActiveGoogleAccountId = (): string => {
-  const saved = localStorage.getItem(KEYS.ACTIVE_GOOGLE_ID);
+export const getActiveProfileId = (): string => {
+  const saved = localStorage.getItem(KEYS.ACTIVE_PROFILE);
   if (saved) return saved;
-  const accounts = getStoredGoogleAccounts();
-  const def = accounts.find(a => a.isDefault) || accounts[0];
-  const defId = def ? def.id : 'google-acc-personal';
-  localStorage.setItem(KEYS.ACTIVE_GOOGLE_ID, defId);
+  const profiles = getStoredProfiles();
+  const def = profiles.find(p => p.isDefault) || profiles[0];
+  const defId = def ? def.id : 'account_1';
+  localStorage.setItem(KEYS.ACTIVE_PROFILE, defId);
   return defId;
 };
 
-export const setActiveGoogleAccountId = (id: string): void => {
-  localStorage.setItem(KEYS.ACTIVE_GOOGLE_ID, id);
-  window.dispatchEvent(new CustomEvent('nexus:google-account-changed', { detail: { accountId: id } }));
+export const setActiveProfileId = (id: string): void => {
+  localStorage.setItem(KEYS.ACTIVE_PROFILE, id);
+  window.dispatchEvent(new CustomEvent('nexus:profile-changed', { detail: { profileId: id } }));
 };
 
-export const getStoredConversations = (googleAccountId: string): Conversation[] => {
-  try {
-    const raw = localStorage.getItem(`${KEYS.CONVERSATIONS}_${googleAccountId}`);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (e) {
-    console.error('Failed to parse conversations', e);
-  }
-
-  const starter: Conversation = {
-    id: `conv-starter-${googleAccountId}`,
-    googleAccountId,
-    title: 'New chat',
-    provider: 'openai',
-    model: 'gpt-4o',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const initialList = [starter];
-  localStorage.setItem(`${KEYS.CONVERSATIONS}_${googleAccountId}`, JSON.stringify(initialList));
-  return initialList;
+export const getActiveServiceId = (): string => {
+  return localStorage.getItem(KEYS.ACTIVE_SERVICE) || 'chatgpt';
 };
 
-export const saveConversation = async (conversation: Conversation): Promise<void> => {
-  const { googleAccountId } = conversation;
-  const list = getStoredConversations(googleAccountId);
-  const idx = list.findIndex(c => c.id === conversation.id);
-  let updated: Conversation[];
-
-  if (idx >= 0) {
-    updated = [...list];
-    updated[idx] = conversation;
-  } else {
-    updated = [conversation, ...list];
-  }
-
-  localStorage.setItem(`${KEYS.CONVERSATIONS}_${googleAccountId}`, JSON.stringify(updated));
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    try {
-      await supabase.from('conversations').upsert({
-        id: conversation.id.startsWith('conv-') ? undefined : conversation.id,
-        title: conversation.title,
-        provider: conversation.provider,
-        model: conversation.model,
-        updated_at: new Date().toISOString(),
-      });
-    } catch (err) {
-      console.warn('Supabase conversation sync error:', err);
-    }
-  }
-};
-
-export const deleteConversation = async (conversationId: string, googleAccountId: string): Promise<void> => {
-  const list = getStoredConversations(googleAccountId);
-  const updated = list.filter(c => c.id !== conversationId);
-  localStorage.setItem(`${KEYS.CONVERSATIONS}_${googleAccountId}`, JSON.stringify(updated));
-  localStorage.removeItem(`${KEYS.MESSAGES}_${conversationId}`);
-};
-
-export const getStoredMessages = (conversationId: string): Message[] => {
-  try {
-    const raw = localStorage.getItem(`${KEYS.MESSAGES}_${conversationId}`);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {
-    console.error('Failed to parse messages', e);
-  }
-
-  return [];
-};
-
-export const saveMessage = async (message: Message): Promise<void> => {
-  const list = getStoredMessages(message.conversationId);
-  const updated = [...list, message];
-  localStorage.setItem(`${KEYS.MESSAGES}_${message.conversationId}`, JSON.stringify(updated));
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
-    try {
-      await supabase.from('messages').insert({
-        role: message.role,
-        content: message.content,
-        model: message.model || null,
-      });
-    } catch (err) {
-      console.warn('Supabase message sync error:', err);
-    }
-  }
+export const setActiveServiceId = (serviceId: string): void => {
+  localStorage.setItem(KEYS.ACTIVE_SERVICE, serviceId);
+  window.dispatchEvent(new CustomEvent('nexus:service-changed', { detail: { serviceId } }));
 };
