@@ -4,22 +4,25 @@ import { SupabaseConfig } from '../types';
 const STORAGE_KEY = 'nexus_ai_supabase_config';
 
 export const getSupabaseConfig = (): SupabaseConfig => {
+  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+  const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed.supabaseUrl && parsed.supabaseAnonKey) {
+        return parsed;
+      }
     }
   } catch (e) {
     console.error('Error reading Supabase config from storage', e);
   }
 
-  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-  const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-
   return {
     supabaseUrl: envUrl,
     supabaseAnonKey: envKey,
-    isConnected: false,
+    isConnected: Boolean(envUrl && envKey),
   };
 };
 
@@ -77,8 +80,7 @@ export const testSupabaseConnection = async (url: string, key: string): Promise<
     if (error) {
       if (error.code === '42P01') {
         return { 
-          success: true, 
-          message: 'Connected to Supabase! (Note: Run schema.sql in your Supabase SQL editor to create the tables).' 
+          success: true 
         };
       }
       return { success: false, message: `Supabase Error: ${error.message}` };
