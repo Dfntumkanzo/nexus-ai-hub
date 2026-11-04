@@ -1,199 +1,88 @@
 import React, { useState, useEffect } from 'react';
+import { GoogleAccountProfile, SupabaseConfig } from './types';
 import { 
-  AIAccount, 
-  ViewMode, 
-  SupabaseConfig, 
-  AIProvider, 
-  AccountCredential 
-} from './types';
-import { 
-  getStoredAccounts, 
-  saveAccount, 
-  deleteAccount, 
-  getActiveAccountId, 
-  setActiveAccountId, 
-  getStoredCredentials, 
-  saveCredential 
+  getStoredGoogleAccounts, 
+  saveGoogleAccount, 
+  deleteGoogleAccount, 
+  getActiveGoogleAccountId, 
+  setActiveGoogleAccountId 
 } from './lib/storage';
 import { getSupabaseConfig, saveSupabaseConfig } from './lib/supabase';
-import { Navbar } from './components/Navbar';
-import { ChatView } from './components/ChatView';
-import { SplitComparisonView } from './components/SplitComparisonView';
-import { AppsLaunchpadView } from './components/AppsLaunchpadView';
-import { SunoStudioView } from './components/SunoStudioView';
-import { ManusAgentView } from './components/ManusAgentView';
-import { AccountSwitcherModal } from './components/AccountSwitcherModal';
-import { ApiVaultModal } from './components/ApiVaultModal';
+import { ChatGPTLayout } from './components/ChatGPTLayout';
+import { GoogleAccountsModal } from './components/GoogleAccountsModal';
 import { SupabaseSettingsModal } from './components/SupabaseSettingsModal';
 
 export const App: React.FC = () => {
-  const [accounts, setAccounts] = useState<AIAccount[]>([]);
+  const [accounts, setAccounts] = useState<GoogleAccountProfile[]>([]);
   const [activeAccountId, setActiveId] = useState<string>('');
-  const [activeView, setActiveView] = useState<ViewMode>('chat');
   const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>(getSupabaseConfig());
 
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
+  const [isAccountsModalOpen, setIsAccountsModalOpen] = useState(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
 
-  const [activeCreds, setActiveCreds] = useState<Record<AIProvider, AccountCredential | null>>({
-    openai: null,
-    anthropic: null,
-    gemini: null,
-    grok: null,
-    manus: null,
-    suno: null,
-    deepseek: null,
-    custom: null,
-  });
-
-  const [credCounts, setCredCounts] = useState<Record<string, number>>({});
-
   useEffect(() => {
-    const loadedAccounts = getStoredAccounts();
+    const loadedAccounts = getStoredGoogleAccounts();
     setAccounts(loadedAccounts);
-    const initialActiveId = getActiveAccountId();
+    const initialActiveId = getActiveGoogleAccountId();
     setActiveId(initialActiveId);
-    refreshCredCounts(loadedAccounts);
-    refreshActiveCreds(initialActiveId);
 
     const handleAccountChange = (e: any) => {
       const newId = e.detail?.accountId;
-      if (newId) {
-        setActiveId(newId);
-        refreshActiveCreds(newId);
-      }
+      if (newId) setActiveId(newId);
     };
 
-    window.addEventListener('nexus:account-changed', handleAccountChange);
-    return () => window.removeEventListener('nexus:account-changed', handleAccountChange);
+    window.addEventListener('nexus:google-account-changed', handleAccountChange);
+    return () => window.removeEventListener('nexus:google-account-changed', handleAccountChange);
   }, []);
 
-  const refreshActiveCreds = (accId: string) => {
-    const creds = getStoredCredentials(accId);
-    setActiveCreds(creds);
-  };
-
-  const refreshCredCounts = (accList: AIAccount[]) => {
-    const counts: Record<string, number> = {};
-    accList.forEach(acc => {
-      const c = getStoredCredentials(acc.id);
-      counts[acc.id] = Object.values(c).filter(item => Boolean(item?.apiKey)).length;
-    });
-    setCredCounts(counts);
-  };
-
   const activeAccount = accounts.find(a => a.id === activeAccountId) || accounts[0] || {
-    id: 'acc-personal',
-    name: 'Personal Pro Workspace',
-    description: 'Primary personal subscription for ChatGPT Plus, Claude & Suno',
-    badgeLabel: 'PERSONAL',
-    avatarColor: '#3B82F6',
-    iconName: 'Sparkles',
+    id: 'google-acc-personal',
+    email: 'personal@gmail.com',
+    displayName: 'Personal',
     isDefault: true,
+    color: '#4285F4',
     createdAt: new Date().toISOString(),
   };
 
   const handleSelectAccount = (id: string) => {
     setActiveId(id);
-    setActiveAccountId(id);
-    refreshActiveCreds(id);
+    setActiveGoogleAccountId(id);
   };
 
-  const handleSaveAccount = async (account: AIAccount) => {
-    await saveAccount(account);
-    const updated = getStoredAccounts();
+  const handleAddAccount = async (account: GoogleAccountProfile) => {
+    await saveGoogleAccount(account);
+    const updated = getStoredGoogleAccounts();
     setAccounts(updated);
-    refreshCredCounts(updated);
   };
 
   const handleDeleteAccount = async (id: string) => {
-    await deleteAccount(id);
-    const updated = getStoredAccounts();
+    await deleteGoogleAccount(id);
+    const updated = getStoredGoogleAccounts();
     setAccounts(updated);
     if (activeAccountId === id && updated.length > 0) {
       handleSelectAccount(updated[0].id);
     }
-    refreshCredCounts(updated);
-  };
-
-  const handleSaveCredential = async (cred: AccountCredential) => {
-    await saveCredential(cred);
-    refreshActiveCreds(cred.accountId);
-    refreshCredCounts(accounts);
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col overflow-hidden font-sans">
-      <Navbar
+    <div className="w-screen h-screen overflow-hidden bg-[#212121]">
+      <ChatGPTLayout
         accounts={accounts}
         activeAccount={activeAccount}
         onSelectAccount={handleSelectAccount}
-        onOpenAccountModal={() => setIsAccountModalOpen(true)}
-        onOpenVaultModal={() => setIsVaultModalOpen(true)}
+        onOpenAccountsModal={() => setIsAccountsModalOpen(true)}
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
-        activeView={activeView}
-        onSelectView={setActiveView}
-        supabaseConfig={supabaseConfig}
-        credentialCounts={credCounts}
+        isSupabaseConnected={supabaseConfig.isConnected}
       />
 
-      <div className="flex-1 flex overflow-hidden">
-        {activeView === 'chat' && (
-          <ChatView
-            activeAccount={activeAccount}
-            credentials={activeCreds}
-            onOpenVault={() => setIsVaultModalOpen(true)}
-            onOpenSplitArena={() => setActiveView('split')}
-          />
-        )}
-
-        {activeView === 'split' && (
-          <SplitComparisonView
-            activeAccount={activeAccount}
-            credentials={activeCreds}
-          />
-        )}
-
-        {activeView === 'launchpad' && (
-          <AppsLaunchpadView
-            activeAccount={activeAccount}
-            onOpenModelChat={(modelId) => {
-              setActiveView('chat');
-            }}
-          />
-        )}
-
-        {activeView === 'suno' && (
-          <SunoStudioView
-            activeAccount={activeAccount}
-          />
-        )}
-
-        {activeView === 'manus' && (
-          <ManusAgentView
-            activeAccount={activeAccount}
-          />
-        )}
-      </div>
-
-      <AccountSwitcherModal
-        isOpen={isAccountModalOpen}
-        onClose={() => setIsAccountModalOpen(false)}
+      <GoogleAccountsModal
+        isOpen={isAccountsModalOpen}
+        onClose={() => setIsAccountsModalOpen(false)}
         accounts={accounts}
         activeAccountId={activeAccountId}
         onSelectAccount={handleSelectAccount}
-        onSaveAccount={handleSaveAccount}
+        onAddAccount={handleAddAccount}
         onDeleteAccount={handleDeleteAccount}
-        credentialCounts={credCounts}
-      />
-
-      <ApiVaultModal
-        isOpen={isVaultModalOpen}
-        onClose={() => setIsVaultModalOpen(false)}
-        activeAccount={activeAccount}
-        credentials={activeCreds}
-        onSaveCredential={handleSaveCredential}
       />
 
       <SupabaseSettingsModal
