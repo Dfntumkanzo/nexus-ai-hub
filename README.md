@@ -1,113 +1,105 @@
-# ⚡ NexusAI Hub - All-In-One Multi-Account AI Workspace
+# ⚡ NexusAI Hub - All-In-One Multi-Account AI Workspace with Shared Memory
 
-> **One platform to rule all your AI accounts and apps without repeated logins or logouts.**  
-> Seamlessly connect and switch between multiple accounts for **ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google), Grok (xAI), Manus AI Agent, Suno AI Music, DeepSeek**, and more, with instant cloud persistence powered by **Supabase**.
+> **One platform to unite all your AI accounts and apps (ChatGPT, Claude, Gemini, Grok, Manus, Suno) under ONE Universal Shared Memory — without repeated logins or logouts.**
+> Connected directly to **Supabase** for perpetual cloud storage and synchronized across models in real time.
+> Features multi-mode intelligence inspired by **Multi (`getmulti.ai`)**: **Chat**, **Side-by-Side Compare Arena**, **Council of Consensus**, and **Autonomous Auto-Route**.
 
 ---
 
-## 🌟 Why NexusAI Hub?
+## 🌟 The Problem Solved
 
-If you use multiple AI services and have separate accounts (e.g. personal subscriptions, work credentials, student accounts, experimental API tiers), you know the daily pain of:
-- Constant **logout and login loops** in your web browser.
-- Lost session context, scattered conversation histories, and tab overload.
-- Needing incognito windows just to prompt Claude or ChatGPT with a secondary account.
+Every day, developers and power users suffer from:
+1. **Repeated Logins & Logouts**: Switching between personal, work, and client accounts across 5+ different websites (ChatGPT, Claude, Gemini, Grok, Suno, Manus).
+2. **Siloed Memory & Zero Context Sharing**: ChatGPT doesn't know what you discussed with Claude 3.7 Sonnet; Gemini doesn't know the project specifications you gave to Manus; Suno has no idea what theme you just designed.
+3. **Scattered Chat History**: Inability to see all chats from all accounts in one organized hierarchy.
 
-**NexusAI Hub completely eliminates this.**  
-It unites all your AI tools, account identities, conversation records, and media generation studios into a single, high-performance web application.
+**NexusAI Hub completely eliminates this.**
 
 ---
 
 ## 🚀 Key Features
 
-### 1. 🔄 1-Click Multi-Account Profile Switching
-- Switch between **Personal Pro, Work/Team Enterprise, Research Lab**, or custom accounts in one click from the top bar.
-- **Zero Logout Required**: Each profile maintains its own isolated API credentials, memory, conversations, and custom parameters.
-- Add unlimited account profiles with custom avatar colors and role tags (`PRO`, `WORK`, `DEV`, `VIP`).
+### 1. 📁 Unified Sidebar Tree Hierarchy
+All your accounts and chats organized in one place:
+```text
+▼ Claude (Anthropic)
+  ▼ Account 1 (Personal • personal.user@gmail.com)
+    - React Architecture Refactor
+    - Hybrid Thinking Algorithms
+▼ ChatGPT (OpenAI)
+  ▼ Account 1 (Personal • personal.user@gmail.com)
+    - Tokyo Travel & Itinerary Plan
+    - Python API Server Optimization
+  ▼ Account 2 (Work • work.corp@company.com)
+    - Q3 Enterprise Strategy Document
+    - Security Compliance Checklist
+▼ Google Gemini
+  ▼ Account 1 (Google Workspace)
+    - 1M Token Codebase Document Analysis
+▼ Grok (xAI)
+  ▼ Account 1 (X Premium)
+    - Real-Time Tech & Market Insights
+▼ Suno AI Studio
+  ▼ Account 1 (Creator Studio)
+    - Cyberpunk Synthwave Anthem (Inline audio player)
+▼ Manus Autonomous Agent
+  ▼ Account 1 (Autonomous Agent)
+    - Autonomous Competitor Research Pipeline (Execution trace)
+```
+- **1-Click Switching**: Click any chat to immediately view and continue it.
+- **Add Accounts Per Provider**: Add `Account 2`, `Account 3`, or custom enterprise accounts under any AI provider at any time.
 
-### 2. 💬 Omni-Chat Interface
-- Unified chat hub supporting:
-  - **OpenAI**: GPT-4o, o3-mini (Reasoning High), GPT-4o-mini
-  - **Anthropic**: Claude 3.7 Sonnet (Hybrid extended thinking), Claude 3.5 Sonnet
-  - **Google**: Gemini 2.5 Flash (1M tokens context), Gemini 2.5 Pro
-  - **xAI**: Grok 3 (Real-time truth), Grok 2 Vision
-  - **DeepSeek**: DeepSeek R1 open-reasoning
-- Real-time streaming responses, markdown formatting, syntax highlighted code blocks, copy utilities, and conversation persistence.
+---
 
-### 3. ⚔️ Split Arena (Multi-Model Battle Mode)
-- Send **one prompt** and watch 2 or 3 models generate answers side-by-side in real-time.
-- Benchmark reasoning depth, latency, and response style across providers.
+### 2. 🧠 Universal Shared Memory Core (`shared_memories`)
+- **One Shared Brain for All Models**: Any memory saved (preferences, project architecture, facts, coding conventions) is **automatically injected into every model prompt**.
+- **Mid-Thread Model Switching**: Start a chat with **ChatGPT (GPT-4o)**, switch mid-thread to **Claude 3.7 Sonnet** for coding, switch to **Suno** to generate a theme track, and command **Manus** to execute the plan — all in the same thread with 100% continuous context!
+- **Auto-Memory Detection**: Tell any model *"Remember that..."* and the engine automatically extracts and writes the memory to Supabase.
 
-### 4. 🎵 Suno AI Music Studio
-- Synthesize full-length audio tracks, cybernetic melodies, and lyrics.
-- Genre selector: *Cyberpunk Synthwave, Lo-Fi Chillhop, Future Bass, Metal, Indie Pop, Orchestral*.
-- Interactive audio player with live soundwave animation, progress scrubbing, and track download.
+---
 
-### 5. 🤖 Manus Autonomous Agent
-- Autonomous agent workspace with execution graph.
-- Executes multi-step digital workflows: decomposes tasks, launches headless browser sandboxes, executes code, and compiles structured deliverables.
+### 3. 🎯 Multi-Mode Workspace (Inspired by `getmulti.ai`)
+Toggle between 4 operational modes at the top bar:
+* **💬 Chat Mode**: Clean ChatGPT-style interface for the active conversation.
+* **⚔️ Compare Mode**: Side-by-side model arena (e.g. GPT-4o vs Claude 3.7 Sonnet) benchmarking responses simultaneously with shared memory.
+* **🏛️ Council Mode**: Deliberate across GPT-4o, Claude 3.7 Sonnet, and Gemini 2.5 Flash to synthesize a unified consensus verdict.
+* **⚡ Auto-Route Mode**: Autonomous orchestrator that inspects your prompt and routes to the best model (Claude for code, o3-mini for math, Suno for audio, Manus for research, Gemini for large documents).
 
-### 6. 🌐 AI Web Apps Portal
-- Directory and launchpad for the full AI ecosystem (ChatGPT, Claude, Gemini, Grok, Manus, Suno, Midjourney, Perplexity, DeepSeek).
-- Guidelines and tools for running isolated browser session containers.
+---
 
-### 7. ☁️ Supabase Cloud Synchronization
-- Ready-to-use Supabase backend integration (`supabase/schema.sql`).
-- Stores accounts, API credentials, chat histories, Suno music tracks, and Manus task logs.
-- Automatic local mirror ensures instant zero-latency usage even before configuring cloud sync.
+### 4. 🎵 Suno & 🤖 Manus Native Integrations
+- **Suno**: Generates radio-ready songs with lyrics and inline HTML5 audio playback.
+- **Manus**: Step-by-step visual execution trace (sandbox creation, web scraping, computation, Supabase sync).
+
+---
+
+### 5. ☁️ Live Supabase Cloud Database Integration
+- Full PostgreSQL database schema in `supabase/schema.sql`.
+- Direct live synchronization for:
+  - `shared_memories`
+  - `conversations`
+  - `messages`
+  - `ai_accounts`
+  - `account_credentials`
+  - `suno_tracks`
+  - `manus_tasks`
 
 ---
 
 ## 🛠️ Quick Start
 
-### 1. Install Dependencies
 ```bash
 npm install
-```
-
-### 2. Launch Development Server
-```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 3. Build for Production
+### Build for Production
 ```bash
 npm run build
 ```
 
 ---
 
-## 🗄️ Supabase Database Setup (2 Minutes)
-
-1. Create a free project on [Supabase](https://supabase.com).
-2. Go to the **SQL Editor** tab in your Supabase dashboard.
-3. Open `supabase/schema.sql` from this repository, copy its contents, paste them into the SQL Editor, and click **Run**.
-4. In Supabase, navigate to **Project Settings → API** and copy:
-   - **Project URL**
-   - **anon / public key**
-5. In NexusAI Hub, click the **Connect Supabase** button in the top navigation bar, paste your credentials, and click **Connect**.
-6. All your chats, music tracks, agent tasks, and accounts are now perpetually backed up to your Supabase cloud database!
-
----
-
-## 🔒 Security & Privacy
-
-- All API keys entered in the **API Vault** are isolated per account profile.
-- Credentials can be saved locally in your browser storage or synced to your private Supabase instance protected with **Row Level Security (RLS)**.
-- Official API endpoints are called directly from your client without any third-party intermediary servers tracking your data.
-
----
-
-## 📦 Tech Stack
-
-- **Frontend**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS v4, Lucide Icons
-- **Database / Cloud Sync**: Supabase (`@supabase/supabase-js`)
-- **Audio & Animations**: Canvas Confetti, HTML5 Web Audio API
-- **Formatting**: React Markdown, Remark GFM
-
----
-
 ## 📄 License
-
-MIT License. Crafted for high-velocity AI builders.
+MIT © Dfntumkanzo
