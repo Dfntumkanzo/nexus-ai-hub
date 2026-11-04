@@ -7,6 +7,8 @@ export type AIProvider =
   | 'manus' 
   | 'deepseek';
 
+export type WorkspaceMode = 'chat' | 'compare' | 'council' | 'autoroute';
+
 export interface ModelInfo {
   id: string;
   name: string;
@@ -39,6 +41,8 @@ export interface ProviderAccount {
   name: string;
   email?: string;
   avatarColor: string;
+  avatarUrl?: string;
+  isGoogleAccount?: boolean;
   apiKey?: string;
   isDefault?: boolean;
   createdAt: string;
