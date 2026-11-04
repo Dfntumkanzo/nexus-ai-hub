@@ -3,8 +3,8 @@ export type AIProvider =
   | 'anthropic' 
   | 'gemini' 
   | 'grok' 
-  | 'manus' 
   | 'suno' 
+  | 'manus' 
   | 'deepseek';
 
 export interface ModelInfo {
@@ -14,35 +14,68 @@ export interface ModelInfo {
   badge: string;
   description: string;
   iconColor: string;
-  url: string;
 }
 
-export interface GoogleAccountProfile {
+export interface ProviderMeta {
+  id: AIProvider;
+  name: string;
+  badge: string;
+  brandColor: string;
+  defaultModelId: string;
+  description: string;
+}
+
+export interface SharedMemory {
   id: string;
-  email: string;
-  displayName: string;
-  avatarUrl?: string;
-  isDefault: boolean;
-  color: string;
+  key: string;
+  content: string;
+  category: 'preference' | 'fact' | 'project' | 'context';
   createdAt: string;
+}
+
+export interface ProviderAccount {
+  id: string;
+  provider: AIProvider;
+  name: string;
+  email?: string;
+  avatarColor: string;
+  apiKey?: string;
+  isDefault?: boolean;
+  createdAt: string;
+}
+
+export interface AgentStep {
+  id: string;
+  title: string;
+  status: 'pending' | 'running' | 'completed';
+  output?: string;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  model: string;
+  provider: AIProvider;
+  audioUrl?: string;
+  agentSteps?: AgentStep[];
+  timestamp: string;
+}
+
+export interface Conversation {
+  id: string;
+  provider: AIProvider;
+  accountId: string;
+  title: string;
+  activeModelId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SupabaseConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   isConnected: boolean;
-}
-
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      webview: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-        src?: string;
-        partition?: string;
-        allowpopups?: string;
-        webpreferences?: string;
-        useragent?: string;
-      };
-    }
-  }
+  lastSyncedAt?: string;
 }
